@@ -19,6 +19,7 @@ import {
   AlertOctagon,
   ChevronLeft,
   ChevronRight,
+  Upload,
 } from "lucide-react";
 import { z } from "zod";
 
@@ -27,6 +28,62 @@ type ContactFormValues = z.infer<typeof contactSchema>;
 export default function ContactsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Fetch lists for CSV import list dropdown selection
+  const { data: lists = [] } = useQuery<any[]>({
+    queryKey: ["lists"],
+    queryFn: () => apiRequest("/lists"),
+  });
+
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importSource, setImportSource] = useState("");
+  const [selectedImportList, setSelectedImportList] = useState("");
+
+  const openImportModal = () => {
+    setImportFile(null);
+    setImportSource("");
+    setSelectedImportList("");
+    setIsImportModalOpen(true);
+  };
+
+  const closeImportModal = () => {
+    setIsImportModalOpen(false);
+  };
+
+  const importMutation = useMutation({
+    mutationFn: (formData: FormData) =>
+      apiRequest("/contacts/import", {
+        method: "POST",
+        body: formData,
+      }),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns-metrics"] });
+      toast(`Importação concluída! ${data.imported} contatos importados, ${data.skipped} ignorados.`, "success");
+      closeImportModal();
+    },
+    onError: (err: any) => {
+      toast(err.message || "Erro ao importar contatos.", "error");
+    },
+  });
+
+  const handleImportSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!importFile) {
+      toast("Por favor, selecione um arquivo CSV.", "error");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("file", importFile);
+    if (importSource.trim()) {
+      formData.append("source", importSource.trim());
+    }
+    if (selectedImportList) {
+      formData.append("list_id", selectedImportList);
+    }
+    importMutation.mutate(formData);
+  };
 
   // Local Search & Filter States
   const [searchTerm, setSearchTerm] = useState("");
@@ -256,10 +313,19 @@ export default function ContactsPage() {
           </p>
         </div>
 
-        <button onClick={openCreateModal} className="neo-btn-primary px-4 py-2.5 flex items-center gap-2">
-          <Plus className="h-5 w-5" />
-          Novo Contato
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={openImportModal}
+            className="neo-btn-secondary px-4 py-2.5 flex items-center gap-2 bg-[#a855f7]/10 hover:bg-[#a855f7]/20 border border-black text-xs font-bold"
+          >
+            <Upload className="h-4 w-4" />
+            Importar CSV
+          </button>
+          <button onClick={openCreateModal} className="neo-btn-primary px-4 py-2.5 flex items-center gap-2">
+            <Plus className="h-5 w-5" />
+            Novo Contato
+          </button>
+        </div>
       </div>
 
       {/* Search & Filters Controls */}
@@ -521,6 +587,99 @@ export default function ContactsPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSV Import Modal overlay */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="max-w-md w-full bg-white dark:bg-[#1e1e1e] border-[3px] border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] flex flex-col">
+            <div className="h-14 flex items-center justify-between px-6 border-b-[3px] border-black dark:border-white bg-[#a855f7]/20 text-black dark:text-white">
+              <h3 className="font-black uppercase tracking-wider text-sm flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Importar Leads (CSV)
+              </h3>
+              <button onClick={closeImportModal} className="p-1 border-2 border-black dark:border-white bg-white dark:bg-slate-800 text-black dark:text-white">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleImportSubmit} className="p-6 space-y-4 text-left">
+              <div>
+                <label className="block text-xs font-black uppercase text-slate-700 dark:text-slate-300 mb-1">
+                  Arquivo CSV *
+                </label>
+                <div className="border-2 border-dashed border-black dark:border-white p-4 text-center cursor-pointer bg-slate-50 dark:bg-slate-900/20 hover:bg-slate-100 dark:hover:bg-slate-900/40 relative">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        setImportFile(e.target.files[0]);
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="space-y-1">
+                    <Upload className="h-8 w-8 mx-auto text-slate-400" />
+                    <p className="text-xs font-bold text-black dark:text-white">
+                      {importFile ? importFile.name : "Clique para selecionar ou arraste o arquivo CSV"}
+                    </p>
+                    <p className="text-[10px] text-slate-400">Suporta delimitadores , ou ;</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase text-slate-700 dark:text-slate-300 mb-1">
+                  Origem dos Leads (Source)
+                </label>
+                <input
+                  type="text"
+                  value={importSource}
+                  onChange={(e) => setImportSource(e.target.value)}
+                  className="w-full py-2 px-3 neo-input"
+                  placeholder="Ex: Leads do Instagram, Evento Outubro"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase text-slate-700 dark:text-slate-300 mb-1">
+                  Associar à Lista de Envio (Opcional)
+                </label>
+                <select
+                  value={selectedImportList}
+                  onChange={(e) => setSelectedImportList(e.target.value)}
+                  className="w-full py-2.5 px-3 neo-input bg-white dark:bg-slate-800"
+                >
+                  <option value="">Não associar a nenhuma lista</option>
+                  {lists.map((l: any) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="pt-4 border-t-2 border-black dark:border-white flex justify-end gap-3">
+                <button type="button" onClick={closeImportModal} className="neo-btn-secondary px-4 py-2 text-xs">
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={importMutation.isPending || !importFile}
+                  className="neo-btn-primary px-6 py-2 text-xs flex items-center gap-1.5"
+                >
+                  {importMutation.isPending ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black"></div>
+                  ) : (
+                    <Check className="h-4 w-4" />
+                  )}
+                  Importar
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
