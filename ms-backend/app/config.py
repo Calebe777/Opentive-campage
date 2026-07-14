@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     access_token_minutes: int = 15
     refresh_token_days: int = 7
     webhook_rate_limit_per_minute: int = 60
+    media_url: str | None = None
 
 
 @lru_cache

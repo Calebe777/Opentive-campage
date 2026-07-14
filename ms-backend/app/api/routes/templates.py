@@ -78,11 +78,17 @@ async def upload_template_image(
     except Exception as e:
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Erro ao salvar arquivo: {str(e)}")
 
-    scheme = request.url.scheme
-    forwarded_proto = request.headers.get("x-forwarded-proto")
-    if forwarded_proto:
-        scheme = forwarded_proto
+    settings = get_settings()
+    if settings.media_url:
+        # Se configurado, a url gerada usa o prefixo media_url
+        base_url = settings.media_url.rstrip("/")
+        url = f"{base_url}/{unique_filename}"
+    else:
+        scheme = request.url.scheme
+        forwarded_proto = request.headers.get("x-forwarded-proto")
+        if forwarded_proto:
+            scheme = forwarded_proto
+        host = request.url.netloc
+        url = f"{scheme}://{host}/static/uploads/{unique_filename}"
 
-    host = request.url.netloc
-    url = f"{scheme}://{host}/static/uploads/{unique_filename}"
     return {"url": url}
