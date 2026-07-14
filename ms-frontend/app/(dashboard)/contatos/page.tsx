@@ -420,8 +420,34 @@ export default function ContactsPage() {
       {/* Bulk Actions Panel */}
       {selectedContactIds.length > 0 && (
         <div className="p-4 border-[3px] border-black bg-[#fef08a] dark:bg-yellow-950/40 text-black dark:text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <div className="font-black text-sm uppercase tracking-wider">
-            {selectedContactIds.length} contato(s) selecionado(s)
+          <div className="flex flex-col gap-1 items-start text-left">
+            <div className="font-black text-sm uppercase tracking-wider">
+              {selectedContactIds.length} contato(s) selecionado(s)
+            </div>
+            {(() => {
+              const isPageSelected = paginatedItems.length > 0 && paginatedItems.every((c: any) => selectedContactIds.includes(c.id));
+              const isAllFilteredSelected = filtered.length > 0 && filtered.every((c: any) => selectedContactIds.includes(c.id));
+              
+              if (!isAllFilteredSelected && isPageSelected && filtered.length > paginatedItems.length) {
+                return (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedContactIds(filtered.map(c => c.id))}
+                    className="text-[10px] font-black uppercase underline hover:text-[#818cf8] text-left"
+                  >
+                    Selecionar todos os {filtered.length} contatos da busca
+                  </button>
+                );
+              }
+              if (isAllFilteredSelected && filtered.length > paginatedItems.length) {
+                return (
+                  <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400">
+                    Todos os {filtered.length} contatos selecionados
+                  </span>
+                );
+              }
+              return null;
+            })()}
           </div>
           <div className="flex flex-wrap gap-3 items-center w-full md:w-auto">
             {/* List Selection */}
