@@ -35,7 +35,11 @@ async def create_template(payload: TemplateCreate, user: User = Depends(current_
 async def ai_generate(payload: AIGenerate, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     try:
         async with httpx.AsyncClient(timeout=60) as client:
-            response = await client.post(f"{get_settings().ai_service_url}/generate", json=payload.model_dump(exclude={"name"}))
+            response = await client.post(
+                f"{get_settings().ai_service_url}/generate",
+                json=payload.model_dump(exclude={"name"}),
+                headers={"X-Internal-API-Key": get_settings().internal_api_key},
+            )
             response.raise_for_status()
             generated = response.json()
         item = Template(user_id=user.id, name=payload.name, subject=generated["subject"], preview_text=generated.get("preview_text"), html_content=sanitize_html(generated["html"]), source="ai", ai_briefing=payload.briefing)

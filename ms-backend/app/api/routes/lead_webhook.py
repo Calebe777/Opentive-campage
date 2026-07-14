@@ -18,10 +18,24 @@ router = APIRouter(prefix="/webhook", tags=["lead webhook"])
 
 
 @router.post("/leads/{token}", status_code=status.HTTP_201_CREATED)
-async def capture_lead(token: str, request: Request, x_webhook_signature: str | None = Header(None), db: AsyncSession = Depends(get_db)):
+async def capture_lead(
+    token: str,
+    request: Request,
+    x_webhook_delivery: str = Header(min_length=1, max_length=255),
+    x_webhook_signature: str | None = Header(None),
+    db: AsyncSession = Depends(get_db),
+):
     webhook = await db.scalar(select(Webhook).where(Webhook.token == token, Webhook.is_active.is_(True)))
     if webhook is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "webhook not found")
+    existing = await db.scalar(
+        select(WebhookLog).where(
+            WebhookLog.webhook_id == webhook.id,
+            WebhookLog.delivery_id == x_webhook_delivery,
+        )
+    )
+    if existing:
+        return {"contact_id": existing.contact_id, "created": False}
     settings = get_settings()
     redis = Redis.from_url(settings.redis_url, decode_responses=True)
     try:
@@ -52,6 +66,14 @@ async def capture_lead(token: str, request: Request, x_webhook_signature: str | 
     if webhook.target_list:
         await db.execute(insert(ListContact).values(list_id=webhook.target_list, contact_id=contact_id).on_conflict_do_nothing())
     webhook.total_leads += 1
-    db.add(WebhookLog(webhook_id=webhook.id, payload=payload.model_dump(mode="json"), status_code=201))
+    db.add(
+        WebhookLog(
+            webhook_id=webhook.id,
+            delivery_id=x_webhook_delivery,
+            contact_id=contact_id,
+            payload=payload.model_dump(mode="json"),
+            status_code=201,
+        )
+    )
     await db.commit()
     return {"contact_id": contact_id, "created": True}

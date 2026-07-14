@@ -110,9 +110,21 @@ class CampaignSend(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class OutboxJob(Base):
+    __tablename__ = "outbox_jobs"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    topic: Mapped[str] = mapped_column(String(100), index=True)
+    payload: Mapped[dict] = mapped_column(JSONB)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Event(Base):
     __tablename__ = "events"
+    __table_args__ = (UniqueConstraint("provider_event_id"),)
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    provider_event_id: Mapped[str] = mapped_column(String(255))
     send_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("campaign_sends.id", ondelete="CASCADE"))
     campaign_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("campaigns.id", ondelete="CASCADE"), index=True)
     contact_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("contacts.id", ondelete="CASCADE"))
@@ -138,8 +150,11 @@ class Webhook(Base):
 
 class WebhookLog(Base):
     __tablename__ = "webhook_logs"
+    __table_args__ = (UniqueConstraint("webhook_id", "delivery_id"),)
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     webhook_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("webhooks.id", ondelete="CASCADE"))
+    delivery_id: Mapped[str] = mapped_column(String(255))
+    contact_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     payload: Mapped[dict] = mapped_column(JSONB)
     status_code: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

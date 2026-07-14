@@ -105,13 +105,22 @@ class CampaignCreate(BaseModel):
     scheduled_at: datetime | None = None
 
 
-class CampaignOut(CampaignCreate, ORMModel):
+class CampaignOut(ORMModel):
     id: uuid.UUID
+    template_id: uuid.UUID | None
+    list_id: uuid.UUID | None
+    name: str
+    subject: str
+    from_name: str | None
+    from_email: EmailStr | None
+    scheduled_at: datetime | None
     status: CampaignStatus
+    sent_at: datetime | None
     created_at: datetime
 
 
 class EventCreate(BaseModel):
+    provider_event_id: str = Field(min_length=1, max_length=255)
     send_id: uuid.UUID
     event_type: str = Field(pattern="^(sent|delivered|failed|open|click|bounce|complaint|unsub)$")
     provider_id: str | None = Field(None, max_length=255)
