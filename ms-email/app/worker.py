@@ -62,6 +62,9 @@ async def process_job(client: httpx.AsyncClient, payload: dict) -> None:
             from_name=data.get("from_name"),
         )
     except Exception as exc:
+        print(f"!!! JOB PROCESS FAILED: {exc}", flush=True)
+        import traceback
+        traceback.print_exc()
         await callback(
             client,
             {
