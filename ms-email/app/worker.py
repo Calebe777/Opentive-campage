@@ -75,6 +75,9 @@ async def process_job(client: httpx.AsyncClient, payload: dict) -> None:
             },
         )
         return
+    
+    print(f"✅ E-mail enviado com sucesso para: {data['to_email']}", flush=True)
+    
     await callback(
         client,
         {
