@@ -31,5 +31,22 @@ services:
     build: ./ms-ai
     env_file: ./ms-ai/.env
     ports: ["8002:8002"]
+  ms-email:
+    build: ./ms-email
+    env_file: ./ms-email/.env
+    ports: ["8001:8001"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      ms-backend:
+        condition: service_started
+  ms-frontend:
+    build: ./ms-frontend
+    ports: ["3000:3000"]
+    depends_on:
+      ms-backend:
+        condition: service_started
 volumes:
   pgdata:

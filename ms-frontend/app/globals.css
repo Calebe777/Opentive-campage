@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f3f4f6; /* slate-100 */
+  --foreground: #000000;
+  
+  /* Neobrutalism color palette */
+  --neo-violet: #818cf8; /* indigo-400 */
+  --neo-yellow: #fde047; /* yellow-300 */
+  --neo-green: #4ade80; /* green-400 */
+  --neo-orange: #fb923c; /* orange-400 */
+  --neo-pink: #f472b6; /* pink-400 */
+  
+  --border-color: #000000;
+  --shadow-color: #000000;
+}
+
+.dark {
+  --background: #121212;
+  --foreground: #ffffff;
+  
+  --neo-violet: #6366f1; /* indigo-500 */
+  --neo-yellow: #eab308; /* yellow-500 */
+  --neo-green: #22c55e; /* green-500 */
+  --neo-orange: #f97316; /* orange-500 */
+  --neo-pink: #ec4899; /* pink-500 */
+  
+  --border-color: #ffffff;
+  --shadow-color: #ffffff;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), sans-serif;
+}
+
+/* Neobrutalism utility components */
+
+.neo-border {
+  border: 3px solid var(--border-color);
+}
+
+.neo-border-thin {
+  border: 2px solid var(--border-color);
+}
+
+.neo-shadow {
+  box-shadow: 4px 4px 0px 0px var(--shadow-color);
+}
+
+.neo-shadow-lg {
+  box-shadow: 8px 8px 0px 0px var(--shadow-color);
+}
+
+.neo-shadow-sm {
+  box-shadow: 2px 2px 0px 0px var(--shadow-color);
+}
+
+/* Dynamic Neobrutalism Interactive Items */
+
+.neo-btn-primary {
+  background-color: var(--neo-violet);
+  color: #000000;
+  border: 3px solid var(--border-color);
+  box-shadow: 4px 4px 0px 0px var(--shadow-color);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.neo-btn-primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px var(--shadow-color);
+}
+
+.neo-btn-primary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px var(--shadow-color);
+}
+
+.neo-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: 2px 2px 0px 0px var(--shadow-color) !important;
+}
+
+.neo-btn-secondary {
+  background-color: #ffffff;
+  color: #000000;
+  border: 3px solid var(--border-color);
+  box-shadow: 4px 4px 0px 0px var(--shadow-color);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.neo-btn-secondary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px var(--shadow-color);
+  background-color: #f9fafb;
+}
+
+.neo-btn-secondary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px var(--shadow-color);
+}
+
+.dark .neo-btn-secondary {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+.dark .neo-btn-secondary:hover {
+  background-color: #334155;
+}
+
+.neo-btn-danger {
+  background-color: #ef4444;
+  color: #ffffff;
+  border: 3px solid var(--border-color);
+  box-shadow: 4px 4px 0px 0px var(--shadow-color);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.neo-btn-danger:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px var(--shadow-color);
+}
+
+.neo-btn-danger:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px var(--shadow-color);
+}
+
+/* Neobrutalism Cards */
+
+.neo-card {
+  background-color: #ffffff;
+  color: #000000;
+  border: 3px solid var(--border-color);
+  box-shadow: 6px 6px 0px 0px var(--shadow-color);
+  border-radius: 0px; /* Sharp brutalist edges */
+  transition: all 0.2s ease-in-out;
+}
+
+.dark .neo-card {
+  background-color: #1e1e1e;
+  color: #ffffff;
+}
+
+/* Neobrutalism inputs */
+
+.neo-input {
+  background-color: #ffffff;
+  color: #000000;
+  border: 3px solid var(--border-color);
+  border-radius: 0px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.neo-input:focus {
+  outline: none;
+  box-shadow: 3px 3px 0px 0px var(--neo-violet);
+}
+
+.dark .neo-input {
+  background-color: #2a2a2a;
+  color: #ffffff;
+}
+
+.dark .neo-input:focus {
+  box-shadow: 3px 3px 0px 0px var(--neo-violet);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

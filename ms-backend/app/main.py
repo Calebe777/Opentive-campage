@@ -1,6 +1,16 @@
 from fastapi import FastAPI
 
-from app.api.routes import auth, campaigns, contacts, events, lead_webhook, lists, templates, webhooks
+from app.api.routes import (
+    auth,
+    campaigns,
+    contacts,
+    events,
+    internal,
+    lead_webhook,
+    lists,
+    templates,
+    webhooks,
+)
 from app.config import get_settings
 
 settings = get_settings()
@@ -15,6 +25,7 @@ for router in (
     webhooks.router,
     lead_webhook.router,
     events.router,
+    internal.router,
 ):
     app.include_router(router)
 
