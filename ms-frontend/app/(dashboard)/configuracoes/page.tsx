@@ -23,7 +23,7 @@ export default function ConfigPage() {
     <div className="space-y-8 animate-fade-in text-left">
       <div>
         <h1 className="text-3xl font-black uppercase tracking-tight">Configurações</h1>
-        <p className="text-sm font-bold text-slate-655 dark:text-slate-400">
+        <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
           Gerenciamento técnico, domínio e status da plataforma.
         </p>
       </div>
@@ -80,7 +80,7 @@ export default function ConfigPage() {
                   <Info className="h-4 w-4" />
                   Segurança SMTP & Credenciais
                 </div>
-                <p className="text-slate-655 dark:text-slate-300 font-bold leading-relaxed">
+                <p className="text-slate-500 dark:text-slate-300 font-bold leading-relaxed">
                   As chaves internas de envio (`INTERNAL_API_KEY`) e as credenciais SMTP do servidor
                   de disparo de e-mails são gerenciadas de forma centralizada e segura no ambiente de
                   variáveis do microsserviço `ms-backend`. Nenhum dado sensível de configuração é

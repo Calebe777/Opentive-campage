@@ -68,7 +68,7 @@ export default function LoginPage() {
             />
           </div>
           {errors.email && (
-            <p className="mt-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-650 px-2.5 py-1 inline-block uppercase">
+            <p className="mt-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-600 px-2.5 py-1 inline-block uppercase">
               {errors.email.message}
             </p>
           )}
@@ -103,7 +103,7 @@ export default function LoginPage() {
             </button>
           </div>
           {errors.password && (
-            <p className="mt-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-650 px-2.5 py-1 inline-block uppercase">
+            <p className="mt-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-600 px-2.5 py-1 inline-block uppercase">
               {errors.password.message}
             </p>
           )}
@@ -129,7 +129,7 @@ export default function LoginPage() {
         Não tem uma conta?{" "}
         <Link
           href="/cadastro"
-          className="text-indigo-650 dark:text-indigo-400 underline hover:text-indigo-800 transition-colors"
+          className="text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-800 transition-colors"
         >
           Cadastre-se gratuitamente
         </Link>

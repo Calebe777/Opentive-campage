@@ -137,7 +137,7 @@ export default function WebhooksPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-2 border-black dark:border-white pb-4">
         <div>
           <h1 className="text-3xl font-black uppercase tracking-tight">Webhooks de Leads</h1>
-          <p className="text-sm font-bold text-slate-655 dark:text-slate-400">
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
             Cadastre endpoints para receber novos contatos de formulários externos de forma automatizada.
           </p>
         </div>
@@ -264,7 +264,7 @@ export default function WebhooksPage() {
                   </span>
                   <button
                     onClick={() => handleCopy(getCurlExample(selectedWebhook.token), setCopiedCurl)}
-                    className="text-[9px] font-black uppercase underline hover:text-indigo-650 text-black dark:text-white"
+                    className="text-[9px] font-black uppercase underline hover:text-indigo-600 text-black dark:text-white"
                   >
                     {copiedCurl ? "Copiado!" : "Copiar Snippet"}
                   </button>
@@ -283,7 +283,7 @@ export default function WebhooksPage() {
                   </span>
                   <button
                     onClick={() => handleCopy(payloadExample, setCopiedPayload)}
-                    className="text-[9px] font-black uppercase underline hover:text-indigo-650 text-black dark:text-white"
+                    className="text-[9px] font-black uppercase underline hover:text-indigo-600 text-black dark:text-white"
                   >
                     {copiedPayload ? "Copiado!" : "Copiar JSON"}
                   </button>

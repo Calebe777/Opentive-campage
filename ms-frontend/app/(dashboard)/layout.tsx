@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (isLoading || !isAuthenticated) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-[#f3f4f6] dark:bg-[#121212]">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-650"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
       </div>
     );
   }

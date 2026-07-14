@@ -385,7 +385,7 @@ export default function NewCampaignPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-bold">
               {/* Left column details */}
               <div className="space-y-4 border-[3px] border-black p-5 bg-slate-50 dark:bg-slate-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                <h4 className="text-xs font-black uppercase border-b border-black pb-1.5 mb-3 text-slate-655">Geral</h4>
+                <h4 className="text-xs font-black uppercase border-b border-black pb-1.5 mb-3 text-slate-500">Geral</h4>
                 <div className="space-y-2.5">
                   <div>
                     <span className="text-[9px] uppercase tracking-wider text-slate-450 block">Nome da Campanha</span>
@@ -397,14 +397,14 @@ export default function NewCampaignPage() {
                   </div>
                   <div>
                     <span className="text-[9px] uppercase tracking-wider text-slate-450 block">Lista Alvo</span>
-                    <span className="uppercase text-xs text-indigo-650">{selectedList?.name || "—"}</span>
+                    <span className="uppercase text-xs text-indigo-600">{selectedList?.name || "—"}</span>
                   </div>
                 </div>
               </div>
 
               {/* Right column details */}
               <div className="space-y-4 border-[3px] border-black p-5 bg-slate-50 dark:bg-slate-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                <h4 className="text-xs font-black uppercase border-b border-black pb-1.5 mb-3 text-slate-655">Disparo</h4>
+                <h4 className="text-xs font-black uppercase border-b border-black pb-1.5 mb-3 text-slate-500">Disparo</h4>
                 <div className="space-y-2.5">
                   <div>
                     <span className="text-[9px] uppercase tracking-wider text-slate-450 block">Remetente</span>
@@ -414,7 +414,7 @@ export default function NewCampaignPage() {
                   </div>
                   <div>
                     <span className="text-[9px] uppercase tracking-wider text-slate-450 block">Template Selecionado</span>
-                    <span className="uppercase text-xs text-emerald-650">{selectedTemplate?.name || "—"}</span>
+                    <span className="uppercase text-xs text-emerald-600">{selectedTemplate?.name || "—"}</span>
                   </div>
                   <div>
                     <span className="text-[9px] uppercase tracking-wider text-slate-450 block">Data de Agendamento</span>

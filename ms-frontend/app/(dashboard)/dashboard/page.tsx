@@ -169,7 +169,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black uppercase tracking-tight">Visão Geral</h1>
-          <p className="text-sm font-bold text-slate-650 dark:text-slate-400">
+          <p className="text-sm font-bold text-slate-600 dark:text-slate-400">
             Acompanhe o desempenho dos seus disparos e crescimento de contatos.
           </p>
         </div>
@@ -260,7 +260,7 @@ export default function DashboardPage() {
             <span className="text-[10px] font-black uppercase tracking-wider">Enviados</span>
             <Mail className="h-4 w-4 text-black dark:text-white" />
           </div>
-          <p className="text-3xl font-black text-indigo-650 dark:text-indigo-400">{formatStat(stats.sendsCount)}</p>
+          <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400">{formatStat(stats.sendsCount)}</p>
         </div>
 
         {/* Aberturas */}
@@ -269,7 +269,7 @@ export default function DashboardPage() {
             <span className="text-[10px] font-black uppercase tracking-wider">Aberturas</span>
             <Eye className="h-4 w-4 text-black dark:text-white" />
           </div>
-          <p className="text-3xl font-black text-emerald-650 dark:text-emerald-450">{formatStat(stats.opensCount)}</p>
+          <p className="text-3xl font-black text-emerald-600 dark:text-emerald-500">{formatStat(stats.opensCount)}</p>
         </div>
 
         {/* Cliques */}
@@ -298,7 +298,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 p-6 bg-white dark:bg-[#1e1e1e] border-[3px] border-black dark:border-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] space-y-4">
           <div className="flex justify-between items-center border-b-2 border-black dark:border-white pb-3">
             <div className="flex items-center gap-2">
-              <BarChart2 className="h-5 w-5 text-indigo-650 dark:text-indigo-400" />
+              <BarChart2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               <h3 className="font-black uppercase tracking-wider text-sm">Desempenho de Disparos</h3>
             </div>
             <span className="text-[10px] font-bold uppercase text-slate-550 dark:text-slate-450 flex items-center gap-1">

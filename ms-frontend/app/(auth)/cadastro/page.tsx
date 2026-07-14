@@ -69,7 +69,7 @@ export default function RegisterPage() {
             />
           </div>
           {errors.name && (
-            <p className="mt-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-650 px-2.5 py-1 inline-block uppercase">
+            <p className="mt-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-600 px-2.5 py-1 inline-block uppercase">
               {errors.name.message}
             </p>
           )}
@@ -97,7 +97,7 @@ export default function RegisterPage() {
             />
           </div>
           {errors.email && (
-            <p className="mt-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-650 px-2.5 py-1 inline-block uppercase">
+            <p className="mt-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-600 px-2.5 py-1 inline-block uppercase">
               {errors.email.message}
             </p>
           )}
@@ -132,7 +132,7 @@ export default function RegisterPage() {
             </button>
           </div>
           {errors.password && (
-            <p className="mt-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-650 px-2.5 py-1 inline-block uppercase">
+            <p className="mt-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-600 px-2.5 py-1 inline-block uppercase">
               {errors.password.message}
             </p>
           )}
@@ -158,7 +158,7 @@ export default function RegisterPage() {
         Já tem uma conta?{" "}
         <Link
           href="/login"
-          className="text-indigo-650 dark:text-indigo-400 underline hover:text-indigo-800 transition-colors"
+          className="text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-800 transition-colors"
         >
           Faça login
         </Link>

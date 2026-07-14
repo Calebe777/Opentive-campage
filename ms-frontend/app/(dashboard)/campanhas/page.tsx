@@ -181,7 +181,7 @@ export default function CampaignsPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black uppercase tracking-tight">Campanhas</h1>
-          <p className="text-sm font-bold text-slate-655 dark:text-slate-400">
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
             Acompanhe o status de envios de e-mails agendados, rascunhos e relatórios estatísticos.
           </p>
         </div>
@@ -334,7 +334,7 @@ export default function CampaignsPage() {
                       {confirmSendCampaign.name}
                     </strong>
                   </p>
-                  <p className="text-xs font-bold leading-relaxed text-slate-655">
+                  <p className="text-xs font-bold leading-relaxed text-slate-500">
                     Este comando enviará mensagens de e-mail em massa aos contatos <strong>ATIVOS</strong> vinculados à lista associada.
                   </p>
                   <div className="flex justify-end gap-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-800">
@@ -439,19 +439,19 @@ export default function CampaignsPage() {
                   <div className="grid grid-cols-3 gap-3">
                     <div className="p-3 bg-[#4ade80]/20 border-2 border-black text-center">
                       <p className="text-[10px] font-black uppercase text-slate-550">Entregue</p>
-                      <p className="text-lg font-black text-emerald-650 mt-1">
+                      <p className="text-lg font-black text-emerald-600 mt-1">
                         {calculated.deliveredRate.toFixed(1)}%
                       </p>
                     </div>
                     <div className="p-3 bg-[#818cf8]/20 border-2 border-black text-center">
                       <p className="text-[10px] font-black uppercase text-slate-550">Abertura</p>
-                      <p className="text-lg font-black text-indigo-650 mt-1">
+                      <p className="text-lg font-black text-indigo-600 mt-1">
                         {calculated.openRate.toFixed(1)}%
                       </p>
                     </div>
                     <div className="p-3 bg-[#fde047]/20 border-2 border-black text-center">
                       <p className="text-[10px] font-black uppercase text-slate-550">Cliques</p>
-                      <p className="text-lg font-black text-amber-650 mt-1">
+                      <p className="text-lg font-black text-amber-600 mt-1">
                         {calculated.clickRate.toFixed(1)}%
                       </p>
                     </div>
@@ -478,7 +478,7 @@ export default function CampaignsPage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500 uppercase text-[10px]">Cliques nos Links</span>
-                        <span className="font-mono text-amber-650">{calculated.clicks}</span>
+                        <span className="font-mono text-amber-600">{calculated.clicks}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500 uppercase text-[10px]">Erros Permanentes (Bounce)</span>
