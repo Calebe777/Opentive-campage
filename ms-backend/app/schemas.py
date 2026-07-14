@@ -146,3 +146,12 @@ class WebhookOut(ORMModel):
 
 class LeadPayload(ContactCreate):
     pass
+
+
+class BulkAddToList(BaseModel):
+    contact_ids: list[uuid.UUID]
+    list_id: uuid.UUID
+
+
+class BulkDeleteContacts(BaseModel):
+    contact_ids: list[uuid.UUID]

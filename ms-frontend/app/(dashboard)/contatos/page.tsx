@@ -40,10 +40,25 @@ export default function ContactsPage() {
   const [importSource, setImportSource] = useState("");
   const [selectedImportList, setSelectedImportList] = useState("");
 
+  // CSV column mapping state
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [emailCol, setEmailCol] = useState("");
+  const [nameCol, setNameCol] = useState("");
+  const [phoneCol, setPhoneCol] = useState("");
+
+  // Bulk actions state
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
+  const [bulkTargetList, setBulkTargetList] = useState("");
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
+
   const openImportModal = () => {
     setImportFile(null);
     setImportSource("");
     setSelectedImportList("");
+    setCsvHeaders([]);
+    setEmailCol("");
+    setNameCol("");
+    setPhoneCol("");
     setIsImportModalOpen(true);
   };
 
@@ -74,8 +89,16 @@ export default function ContactsPage() {
       toast("Por favor, selecione um arquivo CSV.", "error");
       return;
     }
+    if (!emailCol) {
+      toast("Selecione a coluna que corresponde ao E-mail.", "error");
+      return;
+    }
     const formData = new FormData();
     formData.append("file", importFile);
+    formData.append("email_column", emailCol);
+    if (nameCol) formData.append("name_column", nameCol);
+    if (phoneCol) formData.append("phone_column", phoneCol);
+
     if (importSource.trim()) {
       formData.append("source", importSource.trim());
     }
@@ -83,6 +106,55 @@ export default function ContactsPage() {
       formData.append("list_id", selectedImportList);
     }
     importMutation.mutate(formData);
+  };
+
+  const bulkAddToListMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("/contacts/bulk-add-to-list", {
+        method: "POST",
+        body: JSON.stringify({
+          contact_ids: selectedContactIds,
+          list_id: bulkTargetList,
+        }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast("Contatos associados à lista com sucesso!", "success");
+      setSelectedContactIds([]);
+      setBulkTargetList("");
+    },
+    onError: (err: any) => {
+      toast(err.message || "Erro ao associar contatos à lista.", "error");
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("/contacts/bulk-delete", {
+        method: "POST",
+        body: JSON.stringify({
+          contact_ids: selectedContactIds,
+        }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns-metrics"] });
+      toast("Contatos excluídos com sucesso!", "success");
+      setSelectedContactIds([]);
+      setIsBulkDeleteConfirmOpen(false);
+    },
+    onError: (err: any) => {
+      toast(err.message || "Erro ao excluir contatos.", "error");
+    },
+  });
+
+  const handleBulkAddToList = () => {
+    if (!bulkTargetList) return;
+    bulkAddToListMutation.mutate();
+  };
+
+  const handleBulkDeleteSubmit = () => {
+    bulkDeleteMutation.mutate();
   };
 
   // Local Search & Filter States
@@ -276,6 +348,23 @@ export default function ContactsPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedItems = filtered.slice(startIndex, startIndex + itemsPerPage);
 
+  const isAllSelected = paginatedItems.length > 0 && paginatedItems.every((c: any) => selectedContactIds.includes(c.id));
+  
+  const handleSelectAllToggle = () => {
+    if (isAllSelected) {
+      setSelectedContactIds(prev => prev.filter(id => !paginatedItems.some((c: any) => c.id === id)));
+    } else {
+      const newIds = paginatedItems.map((c: any) => c.id).filter((id: string) => !selectedContactIds.includes(id));
+      setSelectedContactIds(prev => [...prev, ...newIds]);
+    }
+  };
+
+  const handleSelectRowToggle = (id: string) => {
+    setSelectedContactIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
@@ -327,6 +416,56 @@ export default function ContactsPage() {
           </button>
         </div>
       </div>
+
+      {/* Bulk Actions Panel */}
+      {selectedContactIds.length > 0 && (
+        <div className="p-4 border-[3px] border-black bg-[#fef08a] dark:bg-yellow-950/40 text-black dark:text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="font-black text-sm uppercase tracking-wider">
+            {selectedContactIds.length} contato(s) selecionado(s)
+          </div>
+          <div className="flex flex-wrap gap-3 items-center w-full md:w-auto">
+            {/* List Selection */}
+            <div className="flex gap-2 items-center flex-1 md:flex-none">
+              <select
+                value={bulkTargetList}
+                onChange={(e) => setBulkTargetList(e.target.value)}
+                className="py-1.5 px-3 border-2 border-black bg-white dark:bg-slate-800 text-xs font-bold uppercase text-black dark:text-white w-full md:w-auto neo-input"
+              >
+                <option value="">Adicionar à lista...</option>
+                {lists.map((l: any) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                disabled={!bulkTargetList || bulkAddToListMutation.isPending}
+                onClick={handleBulkAddToList}
+                className="neo-btn-primary px-4 py-1.5 text-xs font-black uppercase whitespace-nowrap bg-[#818cf8]"
+              >
+                Vincular
+              </button>
+            </div>
+
+            {/* Delete Actions */}
+            <button
+              onClick={() => setIsBulkDeleteConfirmOpen(true)}
+              className="neo-btn-danger px-4 py-1.5 text-xs font-black uppercase bg-red-400 text-black border-2 border-black flex items-center gap-1.5"
+            >
+              <Trash2 className="h-4 w-4" />
+              Excluir
+            </button>
+
+            {/* Clear Selection */}
+            <button
+              onClick={() => setSelectedContactIds([])}
+              className="px-4 py-1.5 text-xs font-black uppercase border-2 border-black bg-white text-black hover:bg-slate-100 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
+            >
+              Limpar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Search & Filters Controls */}
       <div className="flex flex-col md:flex-row gap-4">
@@ -382,6 +521,14 @@ export default function ContactsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#fb923c]/20 border-b-[3px] border-black dark:border-white">
+                <th className="p-4 w-12 text-center border-r-2 border-black dark:border-white">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={handleSelectAllToggle}
+                    className="h-4 w-4 cursor-pointer"
+                  />
+                </th>
                 <th className="p-4 font-black uppercase text-xs tracking-wider border-r-2 border-black dark:border-white">Nome</th>
                 <th className="p-4 font-black uppercase text-xs tracking-wider border-r-2 border-black dark:border-white">E-mail</th>
                 <th className="p-4 font-black uppercase text-xs tracking-wider border-r-2 border-black dark:border-white">Telefone</th>
@@ -394,6 +541,7 @@ export default function ContactsPage() {
               {isLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
+                    <td className="p-4 border-r-2 border-black dark:border-white text-center"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-4 mx-auto"></div></td>
                     <td className="p-4 border-r-2 border-black dark:border-white"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-24"></div></td>
                     <td className="p-4 border-r-2 border-black dark:border-white"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-40"></div></td>
                     <td className="p-4 border-r-2 border-black dark:border-white"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-28"></div></td>
@@ -404,13 +552,21 @@ export default function ContactsPage() {
                 ))
               ) : paginatedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center font-bold uppercase text-xs text-slate-400">
+                  <td colSpan={7} className="p-12 text-center font-bold uppercase text-xs text-slate-400">
                     Nenhum contato encontrado.
                   </td>
                 </tr>
               ) : (
                 paginatedItems.map((contact) => (
-                  <tr key={contact.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
+                  <tr key={contact.id} className={selectedContactIds.includes(contact.id) ? "bg-[#818cf8]/10 hover:bg-[#818cf8]/20" : "hover:bg-slate-50 dark:hover:bg-slate-900/50"}>
+                    <td className="p-4 border-r-2 border-black dark:border-white text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedContactIds.includes(contact.id)}
+                        onChange={() => handleSelectRowToggle(contact.id)}
+                        className="h-4 w-4 cursor-pointer"
+                      />
+                    </td>
                     <td className="p-4 border-r-2 border-black dark:border-white font-bold">{contact.name || "—"}</td>
                     <td className="p-4 border-r-2 border-black dark:border-white font-mono text-xs">{contact.email}</td>
                     <td className="p-4 border-r-2 border-black dark:border-white font-mono text-xs">{contact.phone || "—"}</td>
@@ -605,7 +761,7 @@ export default function ContactsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleImportSubmit} className="p-6 space-y-4 text-left">
+            <form onSubmit={handleImportSubmit} className="p-6 space-y-4 text-left overflow-y-auto max-h-[75vh]">
               <div>
                 <label className="block text-xs font-black uppercase text-slate-700 dark:text-slate-300 mb-1">
                   Arquivo CSV *
@@ -616,7 +772,31 @@ export default function ContactsPage() {
                     accept=".csv"
                     onChange={(e) => {
                       if (e.target.files && e.target.files.length > 0) {
-                        setImportFile(e.target.files[0]);
+                        const file = e.target.files[0];
+                        setImportFile(file);
+                        
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const text = event.target?.result as string;
+                          const firstLine = text.split(/\r?\n/)[0];
+                          if (firstLine) {
+                            const delimiter = firstLine.includes(";") ? ";" : ",";
+                            const headers = firstLine.split(delimiter).map(h => h.trim().replace(/^["']|["']$/g, ""));
+                            setCsvHeaders(headers);
+                            
+                            const lowerHeaders = headers.map(h => h.toLowerCase());
+                            const mailIdx = lowerHeaders.findIndex(h => h.includes("email") || h.includes("e-mail"));
+                            const nameIdx = lowerHeaders.findIndex(h => h.includes("name") || h.includes("nome"));
+                            const phoneIdx = lowerHeaders.findIndex(h => h.includes("phone") || h.includes("telefone") || h.includes("celular") || h.includes("tel"));
+                            
+                            if (mailIdx !== -1) setEmailCol(headers[mailIdx]);
+                            else if (headers.length > 0) setEmailCol(headers[0]);
+                            
+                            if (nameIdx !== -1) setNameCol(headers[nameIdx]);
+                            if (phoneIdx !== -1) setPhoneCol(headers[phoneIdx]);
+                          }
+                        };
+                        reader.readAsText(file.slice(0, 4096));
                       }
                     }}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -630,6 +810,61 @@ export default function ContactsPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Dynamic Column Mapping UI */}
+              {csvHeaders.length > 0 && (
+                <div className="space-y-3 p-4 border-2 border-black dark:border-white bg-slate-50 dark:bg-slate-900/30">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-black dark:text-white">Mapeamento de Colunas</h4>
+                  
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 mb-1">
+                      Coluna de E-mail *
+                    </label>
+                    <select
+                      value={emailCol}
+                      onChange={(e) => setEmailCol(e.target.value)}
+                      className="w-full py-1.5 px-2.5 text-xs neo-input bg-white dark:bg-slate-800"
+                    >
+                      <option value="">Selecione...</option>
+                      {csvHeaders.map(h => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 mb-1">
+                      Coluna de Nome (Opcional)
+                    </label>
+                    <select
+                      value={nameCol}
+                      onChange={(e) => setNameCol(e.target.value)}
+                      className="w-full py-1.5 px-2.5 text-xs neo-input bg-white dark:bg-slate-800"
+                    >
+                      <option value="">Ignorar ou importar como atributo extra</option>
+                      {csvHeaders.map(h => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 mb-1">
+                      Coluna de Telefone (Opcional)
+                    </label>
+                    <select
+                      value={phoneCol}
+                      onChange={(e) => setPhoneCol(e.target.value)}
+                      className="w-full py-1.5 px-2.5 text-xs neo-input bg-white dark:bg-slate-800"
+                    >
+                      <option value="">Ignorar ou importar como atributo extra</option>
+                      {csvHeaders.map(h => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-black uppercase text-slate-700 dark:text-slate-300 mb-1">
@@ -680,6 +915,44 @@ export default function ContactsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal overlay */}
+      {isBulkDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="max-w-md w-full bg-white dark:bg-[#1e1e1e] border-[3px] border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+            <div className="h-12 flex items-center justify-between px-6 border-b-[3px] border-black dark:border-white bg-[#ef4444]/20 text-black dark:text-white">
+              <span className="font-black uppercase tracking-wider text-xs flex items-center gap-1">
+                <AlertOctagon className="h-4 w-4" />
+                Excluir Contatos em Massa
+              </span>
+            </div>
+            <div className="p-6 space-y-4 text-left">
+              <p className="text-sm font-bold leading-relaxed text-slate-800 dark:text-slate-200">
+                Tem certeza de que deseja remover permanentemente os <strong>{selectedContactIds.length}</strong> contatos selecionados?
+                Esta ação é irreversível!
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setIsBulkDeleteConfirmOpen(false)}
+                  className="neo-btn-secondary px-4 py-2 text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleBulkDeleteSubmit}
+                  disabled={bulkDeleteMutation.isPending}
+                  className="neo-btn-danger px-4 py-2 text-xs flex items-center gap-1.5 bg-red-500"
+                >
+                  {bulkDeleteMutation.isPending && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black"></div>
+                  )}
+                  Confirmar Exclusão
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

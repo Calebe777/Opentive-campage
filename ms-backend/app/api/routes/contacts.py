@@ -8,8 +8,8 @@ import io
 
 from app.database import get_db
 from app.dependencies import current_user
-from app.models import Contact, User, ListContact
-from app.schemas import ContactCreate, ContactOut, ContactUpdate
+from app.models import Contact, User, ListContact, List
+from app.schemas import ContactCreate, ContactOut, ContactUpdate, BulkAddToList, BulkDeleteContacts
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
 
@@ -57,6 +57,9 @@ async def delete_contact(contact_id: uuid.UUID, user: User = Depends(current_use
 @router.post("/import", status_code=status.HTTP_200_OK)
 async def import_contacts_csv(
     file: UploadFile = File(...),
+    email_column: str = Form(...),
+    name_column: str | None = Form(None),
+    phone_column: str | None = Form(None),
     source: str | None = Form(None),
     list_id: str | None = Form(None),
     user: User = Depends(current_user),
@@ -75,15 +78,9 @@ async def import_contacts_csv(
 
         reader = csv.DictReader(csv_file, delimiter=delimiter)
 
-        fieldnames = reader.fieldnames or []
-        normalized_fields = {f.lower().strip(): f for f in fieldnames}
-
-        email_col = next((normalized_fields[k] for k in ["email", "e-mail"] if k in normalized_fields), None)
-        name_col = next((normalized_fields[k] for k in ["name", "nome"] if k in normalized_fields), None)
-        phone_col = next((normalized_fields[k] for k in ["phone", "telefone", "tel", "celular"] if k in normalized_fields), None)
-
-        if not email_col:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "O arquivo CSV deve conter uma coluna de e-mail.")
+        email_col = email_column.strip()
+        name_col = name_column.strip() if (name_column and name_column.strip()) else None
+        phone_col = phone_column.strip() if (phone_column and phone_column.strip()) else None
 
         imported_count = 0
         skipped_count = 0
@@ -150,3 +147,41 @@ async def import_contacts_csv(
         raise e
     except Exception as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Erro ao processar o arquivo CSV: {str(e)}")
+
+
+@router.post("/bulk-add-to-list", status_code=status.HTTP_204_NO_CONTENT)
+async def bulk_add_to_list(
+    payload: BulkAddToList,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    list_exists = await db.scalar(select(List.id).where(List.id == payload.list_id, List.user_id == user.id))
+    if list_exists is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Lista não encontrada.")
+
+    # Get valid contact IDs belonging to user
+    stmt = select(Contact.id).where(Contact.id.in_(payload.contact_ids), Contact.user_id == user.id)
+    valid_contact_ids = (await db.scalars(stmt)).all()
+
+    for cid in valid_contact_ids:
+        already_in_list = await db.scalar(
+            select(ListContact).where(ListContact.list_id == payload.list_id, ListContact.contact_id == cid)
+        )
+        if not already_in_list:
+            db.add(ListContact(list_id=payload.list_id, contact_id=cid))
+    
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/bulk-delete", status_code=status.HTTP_204_NO_CONTENT)
+async def bulk_delete_contacts(
+    payload: BulkDeleteContacts,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from sqlalchemy import delete
+    stmt = delete(Contact).where(Contact.id.in_(payload.contact_ids), Contact.user_id == user.id)
+    await db.execute(stmt)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
