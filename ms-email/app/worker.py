@@ -90,6 +90,7 @@ async def process_job(client: httpx.AsyncClient, payload: dict) -> None:
 
 
 async def run() -> None:
+    print("🚀 Iniciando o robô disparador de emails...", flush=True)
     settings = get_settings()
     redis = Redis.from_url(settings.redis_url, decode_responses=True)
     headers = {"X-Internal-API-Key": settings.internal_api_key}
