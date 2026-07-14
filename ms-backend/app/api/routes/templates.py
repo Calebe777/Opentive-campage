@@ -27,7 +27,7 @@ async def list_templates(user: User = Depends(current_user), db: AsyncSession = 
 
 @router.post("", response_model=TemplateOut, status_code=status.HTTP_201_CREATED)
 async def create_template(payload: TemplateCreate, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    item = Template(user_id=user.id, **payload.model_dump(exclude={"html_content"}), html_content=sanitize_html(payload.html_content))
+    item = Template(user_id=user.id, **payload.model_dump())
     db.add(item)
     await db.commit()
     await db.refresh(item)
@@ -45,7 +45,7 @@ async def ai_generate(payload: AIGenerate, user: User = Depends(current_user), d
             )
             response.raise_for_status()
             generated = response.json()
-        item = Template(user_id=user.id, name=payload.name, subject=generated["subject"], preview_text=generated.get("preview_text"), html_content=sanitize_html(generated["html"]), source="ai", ai_briefing=payload.briefing)
+        item = Template(user_id=user.id, name=payload.name, subject=generated["subject"], preview_text=generated.get("preview_text"), html_content=generated["html"], source="ai", ai_briefing=payload.briefing)
     except (httpx.HTTPError, KeyError, ValueError) as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "AI service failed") from exc
     db.add(item)
