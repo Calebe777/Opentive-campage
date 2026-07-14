@@ -96,11 +96,18 @@ async def run() -> None:
     async with httpx.AsyncClient(timeout=30, headers=headers) as client:
         try:
             while True:
-                await publish_outbox(redis)
-                item = await redis.blpop("email:send", timeout=max(1, int(settings.worker_poll_seconds)))
-                if item:
-                    with suppress(json.JSONDecodeError, KeyError, ValueError):
-                        await process_job(client, json.loads(item[1]))
+                try:
+                    await publish_outbox(redis)
+                    item = await redis.blpop("email:send", timeout=max(1, int(settings.worker_poll_seconds)))
+                    if item:
+                        with suppress(json.JSONDecodeError, KeyError, ValueError):
+                            await process_job(client, json.loads(item[1]))
+                except Exception as exc:
+                    print(f"!!! WORKER LOOP ERROR: {exc}", flush=True)
+                    import traceback
+                    traceback.print_exc()
+                    await asyncio.sleep(5)
+
         finally:
             await redis.aclose()
 
