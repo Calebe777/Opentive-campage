@@ -8,7 +8,7 @@ from app.database import Base
 from app import models  # noqa: F401
 
 config = context.config
-config.set_main_option("sqlalchemy.url", get_settings().database_url.replace("+asyncpg", ""))
+config.set_main_option("sqlalchemy.url", get_settings().database_url.replace("+asyncpg", "+psycopg"))
 if config.config_file_name:
     fileConfig(config.config_file_name)
 target_metadata = Base.metadata
