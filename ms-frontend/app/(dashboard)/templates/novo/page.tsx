@@ -29,9 +29,10 @@ export default function NewTemplatePage() {
   const [activeTab, setActiveTab] = useState<"html" | "ai">("html");
 
   // HTML Editor States
-  const [htmlContent, setHtmlContent] = useState(
-    `<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: sans-serif; padding: 20px; }\n    h1 { color: #4f46e5; }\n  </style>\n</head>\n<body>\n  <h1>Olá, {{name}}!</h1>\n  <p>Este é o seu novo template de e-mail.</p>\n</body>\n</html>`
-  );
+  const initialHtml = `<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: sans-serif; padding: 20px; }\n    h1 { color: #4f46e5; }\n  </style>\n</head>\n<body>\n  <h1>Olá, {{name}}!</h1>\n  <p>Este é o seu novo template de e-mail.</p>\n</body>\n</html>`;
+
+  // HTML Editor States
+  const [htmlContent, setHtmlContent] = useState(initialHtml);
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [isSavingHtml, setIsSavingHtml] = useState(false);
 
@@ -69,6 +70,7 @@ export default function NewTemplatePage() {
   const {
     register: registerHtml,
     handleSubmit: handleSubmitHtml,
+    setValue: setValueHtml,
     formState: { errors: errorsHtml },
   } = useForm<HTMLFormValues>({
     resolver: zodResolver(templateSchema),
@@ -76,9 +78,14 @@ export default function NewTemplatePage() {
       name: "",
       subject: "",
       preview_text: "",
-      html_content: "",
+      html_content: initialHtml,
     },
   });
+
+  // Register html_content inside react-hook-form
+  useEffect(() => {
+    registerHtml("html_content");
+  }, [registerHtml]);
 
   // Form AI Setup
   const {
@@ -258,8 +265,11 @@ export default function NewTemplatePage() {
                   height="100%"
                   language="html"
                   theme="vs-dark"
-                  value={htmlContent}
-                  onChange={(val) => setHtmlContent(val || "")}
+                  onChange={(val) => {
+                    const value = val || "";
+                    setHtmlContent(value);
+                    setValueHtml("html_content", value, { shouldValidate: true });
+                  }}
                   options={{
                     minimap: { enabled: false },
                     fontSize: 12,
