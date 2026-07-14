@@ -17,6 +17,9 @@ import {
   Check,
   Cpu,
   RefreshCw,
+  Upload,
+  Copy,
+  Image,
 } from "lucide-react";
 import { z } from "zod";
 
@@ -35,6 +38,47 @@ export default function NewTemplatePage() {
   const [htmlContent, setHtmlContent] = useState(initialHtml);
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [isSavingHtml, setIsSavingHtml] = useState(false);
+
+  // Image Upload States
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    if (!file.type.startsWith("image/")) {
+      toast("Apenas arquivos de imagem são permitidos.", "error");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const data = await apiRequest("/templates/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      if (data && data.url) {
+        setUploadedImages((prev) => [data.url, ...prev]);
+        toast("Imagem carregada com sucesso!", "success");
+      }
+    } catch (err: any) {
+      toast(err.message || "Erro ao subir imagem.", "error");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleCopySnippet = (url: string, index: number) => {
+    const htmlSnippet = `<img src="${url}" alt="" style="max-width: 100%; height: auto; display: block; margin: 10px auto;" />`;
+    navigator.clipboard.writeText(htmlSnippet);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
+    toast("Código <img> copiado para área de transferência!", "success");
+  };
 
   // AI Generator States
   const [isGenerating, setIsGenerating] = useState(false);
@@ -252,6 +296,66 @@ export default function NewTemplatePage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* Image Uploader & Gallery */}
+            <div className="border-[3px] border-black dark:border-white p-4 bg-slate-50 dark:bg-slate-900/30 space-y-3">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Image className="h-4 w-4 text-[#a855f7]" />
+                  Upload de Imagem para o Template
+                </label>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">VPS Storage</span>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1 relative border-2 border-dashed border-black dark:border-white p-3 text-center cursor-pointer bg-white dark:bg-[#1e1e1e] hover:bg-slate-100 dark:hover:bg-slate-900/50">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    disabled={isUploadingImage}
+                  />
+                  <div className="flex items-center justify-center gap-2">
+                    {isUploadingImage ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black dark:border-white"></div>
+                    ) : (
+                      <Upload className="h-4 w-4 text-slate-400" />
+                    )}
+                    <span className="text-xs font-bold text-black dark:text-white">
+                      {isUploadingImage ? "Enviando imagem..." : "Clique para subir imagem (PNG, JPG, GIF)"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Uploaded images gallery list */}
+              {uploadedImages.length > 0 && (
+                <div className="grid grid-cols-1 gap-2 pt-1 max-h-[140px] overflow-y-auto pr-1">
+                  {uploadedImages.map((imgUrl, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 border-2 border-black dark:border-white bg-white dark:bg-[#1e1e1e] gap-3">
+                      <div className="flex items-center gap-2 overflow-hidden flex-1">
+                        <img src={imgUrl} alt="" className="h-8 w-8 object-cover border border-black" />
+                        <span className="text-[10px] font-mono truncate select-all flex-1 text-black dark:text-white">{imgUrl}</span>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleCopySnippet(imgUrl, index)}
+                          className="px-2 py-1 text-[9px] font-black uppercase border-2 border-black bg-[#fb923c] hover:bg-[#fb923c]/80 flex items-center gap-1 text-black"
+                        >
+                          {copiedIndex === index ? (
+                            <Check className="h-3 w-3" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                          {copiedIndex === index ? "Copiado!" : "Copiar <img>"}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Monaco Editor Container */}

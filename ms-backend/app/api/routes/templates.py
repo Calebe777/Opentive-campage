@@ -1,6 +1,9 @@
 import bleach
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+import os
+import uuid
+import shutil
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -49,3 +52,37 @@ async def ai_generate(payload: AIGenerate, user: User = Depends(current_user), d
     await db.commit()
     await db.refresh(item)
     return item
+
+
+@router.post("/upload-image", status_code=status.HTTP_200_OK)
+async def upload_template_image(
+    request: Request,
+    file: UploadFile = File(...),
+    user: User = Depends(current_user),
+):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Apenas arquivos de imagem são permitidos.")
+
+    ext = os.path.splitext(file.filename)[1]
+    if not ext:
+        ext = ".png"
+    unique_filename = f"{uuid.uuid4()}{ext}"
+
+    upload_dir = "static/uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, unique_filename)
+
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Erro ao salvar arquivo: {str(e)}")
+
+    scheme = request.url.scheme
+    forwarded_proto = request.headers.get("x-forwarded-proto")
+    if forwarded_proto:
+        scheme = forwarded_proto
+
+    host = request.url.netloc
+    url = f"{scheme}://{host}/static/uploads/{unique_filename}"
+    return {"url": url}
